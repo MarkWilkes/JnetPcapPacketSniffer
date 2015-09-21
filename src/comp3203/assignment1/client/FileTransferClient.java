@@ -24,6 +24,7 @@ public class FileTransferClient {
 			inputStream = new ObjectInputStream(connection.getInputStream());
 			outputStream.writeObject("ping"); // test message
 			System.out.println(inputStream.readObject());
+			outputStream.writeObject("bye");
 		} catch (IOException | ClassNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -33,7 +34,7 @@ public class FileTransferClient {
 	public static void main(String[] args) {
 		String host = args[0];
 		int port = Integer.parseInt(args[1]);
-		// new FileTransferClient(host, port);
+		new FileTransferClient(host, port);
 	}
 
 }

@@ -5,8 +5,11 @@ package comp3203.assignment1.server;
  *
  */
 
-import java.net.*;
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.net.ServerSocket;
+import java.net.Socket;
 
 
 public class FileTransferServer {
@@ -41,11 +44,7 @@ public class FileTransferServer {
 		out = null;
 		in = null;
 		
-		while(true){
-			if(stop){
-				break;
-			}
-			
+		while(!stop){
 			try {
 				clientS = s.accept();
 				System.out.println("Handling client at " + 
@@ -57,26 +56,26 @@ public class FileTransferServer {
 			}
 			
 			try{
-				in = (ObjectInputStream) clientS.getInputStream();
-				out = (ObjectOutputStream) clientS.getOutputStream();
+				in = new ObjectInputStream(clientS.getInputStream());
+				out = new ObjectOutputStream(clientS.getOutputStream());
 			} catch (IOException e){
-				System.out.println("Failed to read");
+				e.printStackTrace();
 				System.exit(-1);
 			}
 			
 			while(true){
 				try{
-					line = (String) in.readObject();
+					line = in.readObject().toString();
 					if(line.equals("bye")){
 						break;
 					}
 					out.writeObject(line);
 				} catch (IOException e){
-					System.out.println("Failed to read");
-					System.exit(-1);
+					e.printStackTrace();
+					break;
 				} catch (ClassNotFoundException e){
-					System.out.println("Failed to read");
-					System.exit(-1);
+					e.printStackTrace();
+					break;
 				}
 			}
 			
