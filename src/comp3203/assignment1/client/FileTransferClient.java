@@ -57,8 +57,8 @@ public class FileTransferClient {
 					outputStream.writeObject("pwd");
 					System.out.println("Reply:");
 					System.out.println(inputStream.readObject());
-				}else if(s.equals("cd")){
-					outputStream.writeObject("cd");
+				}else if(s.startsWith("cd ")){
+					outputStream.writeObject(s);
 					System.out.println("Reply:");
 					System.out.println(inputStream.readObject());
 				}else if(s.equals("mkdir")){

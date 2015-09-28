@@ -83,8 +83,22 @@ public class FileTransferServer {
 					}
 					out.writeObject(message);
 				}
-				else{
+				else if (line.equals("ping")){
 					out.writeObject(line);
+				}
+				else if (line.startsWith("cd ")){
+					File newdir = new File(line.substring(3)).getAbsoluteFile();
+					if(newdir.isDirectory()){
+						System.setProperty("user.dir", newdir.getAbsolutePath());
+						wd = newdir.getAbsolutePath();
+						out.writeObject(wd);
+					}
+					else{
+						out.writeObject("That is not a valid directory.");
+					}
+				}
+				else {
+					out.writeObject("Error command '" + line + "' not known");
 				}
 			} catch (IOException e){
 				e.printStackTrace();
