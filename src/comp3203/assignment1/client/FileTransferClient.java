@@ -35,10 +35,6 @@ public class FileTransferClient {
 				System.out.println("\nPlease Enter A Command");
 				s = in.readLine();
 				
-				
-				outputStream.writeObject("ping"); // test message
-				System.out.println(inputStream.readObject());
-				
 				if(s.equals("exit")){
 					break;
 				}else if(s.equals("ping")){
