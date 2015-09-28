@@ -18,17 +18,68 @@ public class FileTransferClient {
 	Socket connection;
 	ObjectOutputStream outputStream;
 	ObjectInputStream inputStream;
-
+	
 	public FileTransferClient(String host, int port) {
 		try {
+			System.out.println("Attempting to establish connection to host");
+			BufferedReader in
+			   = new BufferedReader(new InputStreamReader(System.in));
 			connection = new Socket(host, port);
 			outputStream = new ObjectOutputStream(connection.getOutputStream());
 			inputStream = new ObjectInputStream(connection.getInputStream());
-			outputStream.writeObject("ping"); // test message
-			System.out.println(inputStream.readObject());
+			String s;
+			
+			System.out.println("Connection Established\n");
+			
+			while(true){
+				System.out.println("\nPlease Enter A Command");
+				s = in.readLine();
+				
+				
+				outputStream.writeObject("ping"); // test message
+				System.out.println(inputStream.readObject());
+				
+				if(s.equals("exit")){
+					break;
+				}else if(s.equals("ping")){
+					outputStream.writeObject("ping");
+					System.out.println("Reply:");
+					System.out.println(inputStream.readObject());
+				}else if(s.equals("ls")){
+					outputStream.writeObject("ls");
+					System.out.println("Reply:");
+					System.out.println(inputStream.readObject());
+				}else if(s.equals("get")){
+					outputStream.writeObject("get");
+					System.out.println("Reply:");
+					System.out.println(inputStream.readObject());
+				}else if(s.equals("put")){
+					outputStream.writeObject("put");
+					System.out.println("Reply:");
+					System.out.println(inputStream.readObject());
+				}else if(s.equals("pwd")){
+					outputStream.writeObject("pwd");
+					System.out.println("Reply:");
+					System.out.println(inputStream.readObject());
+				}else if(s.equals("cd")){
+					outputStream.writeObject("cd");
+					System.out.println("Reply:");
+					System.out.println(inputStream.readObject());
+				}else if(s.equals("mkdir")){
+					outputStream.writeObject("mkdir");
+					System.out.println("Reply:");
+					System.out.println(inputStream.readObject());
+				}else{
+					System.out.println("Error, command: "+s+" not supported");
+				}
+				
+			}
 			outputStream.writeObject("bye");
-		} catch (IOException | ClassNotFoundException e) {
-			// TODO Auto-generated catch block
+		} catch (IOException e) {
+			System.out.println("Error: IO Exception");
+			e.printStackTrace();
+		} catch(ClassNotFoundException e){
+			System.out.println("Error: ClassNotFound Exception");
 			e.printStackTrace();
 		}
 	}
