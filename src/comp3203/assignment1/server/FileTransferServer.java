@@ -5,6 +5,7 @@ package comp3203.assignment1.server;
  *
  */
 
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -23,14 +24,16 @@ public class FileTransferServer {
 	private static Socket clientS;
 	private static String line;
 	
-	//working directory
-	//private static String wd;
+	private static String wd;
 	
 	public FileTransferServer() {
 		line = null;
 		clientS = null;
 		out = null;
 		in = null;
+		
+		wd = System.getProperty("user.dir");
+		System.out.println(wd);
 		
 		try {
 			s = new ServerSocket(0);
@@ -65,9 +68,24 @@ public class FileTransferServer {
 			try{
 				line = in.readObject().toString();
 				if(line.equals("bye")){
+					System.out.println("Closed connection");
 					break;
 				}
-				out.writeObject(line);
+				else if(line.equals("pwd")){
+					out.writeObject(wd);
+				}
+				else if(line.equals("ls")){
+					File f = new File(wd);
+					String children[] = f.list();
+					String message = "";
+					for(String child: children){
+						message += child + "\n";
+					}
+					out.writeObject(message);
+				}
+				else{
+					out.writeObject(line);
+				}
 			} catch (IOException e){
 				e.printStackTrace();
 				break;
@@ -83,7 +101,7 @@ public class FileTransferServer {
 			System.out.println("Failed to close client connection");
 			return(-1);
 		}
-		return(0);
+		return(-1);
 	}
 
 	public static void main(String[] args) {
