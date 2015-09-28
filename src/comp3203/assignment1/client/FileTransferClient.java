@@ -61,8 +61,8 @@ public class FileTransferClient {
 					outputStream.writeObject(s);
 					System.out.println("Reply:");
 					System.out.println(inputStream.readObject());
-				}else if(s.equals("mkdir")){
-					outputStream.writeObject("mkdir");
+				}else if(s.startsWith("mkdir ")){
+					outputStream.writeObject(s);
 					System.out.println("Reply:");
 					System.out.println(inputStream.readObject());
 				}else{

@@ -87,14 +87,39 @@ public class FileTransferServer {
 					out.writeObject(line);
 				}
 				else if (line.startsWith("cd ")){
-					File newdir = new File(line.substring(3)).getAbsoluteFile();
-					if(newdir.isDirectory()){
+					if(line.equals("cd ..")){
+						File newdir = new File(wd).getParentFile();
 						System.setProperty("user.dir", newdir.getAbsolutePath());
 						wd = newdir.getAbsolutePath();
 						out.writeObject(wd);
+						
 					}
 					else{
-						out.writeObject("That is not a valid directory.");
+						File newdir = new File(line.substring(3)).getAbsoluteFile();
+						if(newdir.isDirectory()){
+							System.setProperty("user.dir", newdir.getAbsolutePath());
+							wd = newdir.getAbsolutePath();
+							out.writeObject(wd);
+						}
+						else{
+							out.writeObject("That is not a valid directory.");
+						}
+					}
+				}
+				else if (line.startsWith("mkdir ")){
+					File newdir = new File(line.substring(6)).getAbsoluteFile();
+					if(!newdir.exists()){
+						if(newdir.mkdirs()){
+							System.setProperty("user.dir", newdir.getAbsolutePath());
+							wd = newdir.getAbsolutePath();
+							out.writeObject(wd);
+						}
+						else{
+							out.writeObject("Failed to make new directory");
+						}
+					}
+					else{
+						out.writeObject("A directory of that name already exists");
 					}
 				}
 				else {
