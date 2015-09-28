@@ -1,6 +1,8 @@
 package comp3203.assignment1.client;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
@@ -32,9 +34,23 @@ public class FileTransferClient {
 	}
 
 	public static void main(String[] args) {
-		String host = args[0];
-		int port = Integer.parseInt(args[1]);
-		new FileTransferClient(host, port);
+		BufferedReader in
+		   = new BufferedReader(new InputStreamReader(System.in));
+		
+		String host ;
+		int port;
+		try {
+			System.out.println("Enter a Host IP");
+			host = in.readLine();
+			System.out.println("Enter a Port");
+			port = Integer.parseInt(in.readLine());
+			
+			new FileTransferClient(host, port);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (NumberFormatException e){
+			e.printStackTrace();
+		}
 	}
 
 }
