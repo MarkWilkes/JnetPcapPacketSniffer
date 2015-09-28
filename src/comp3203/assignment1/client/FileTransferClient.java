@@ -9,8 +9,6 @@ import java.net.Socket;
 
 /**
  * Main class for the file transfer program, client side.
- * @author Richard
- *
  */
 
 public class FileTransferClient {
