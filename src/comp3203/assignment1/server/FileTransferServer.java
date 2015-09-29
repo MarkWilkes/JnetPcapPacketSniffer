@@ -166,6 +166,17 @@ public class FileTransferServer {
 						out.writeObject("Error: Access denied");
 					}
 				}
+				//transfer file from client
+				else if(line.startsWith("put ")) {
+					// full path and name of file
+					String fileName = wd + File.separator + line.substring(4);
+					try {
+						Files.write(new File(fileName).toPath(), (byte[]) in.readObject());
+						out.writeObject("File Transfer Success");
+					} catch(ClassCastException e) {
+						out.writeObject("Error: Invalid file data");
+					}
+				}
 				//we don't know what you said client
 				else {
 					out.writeObject("Error command '" + line + "' not known");

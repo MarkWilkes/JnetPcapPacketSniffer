@@ -47,10 +47,8 @@ public class FileTransferClient {
 					System.out.println(inputStream.readObject());
 				}else if(s.startsWith("get ")){
 					getFile(s);
-				}else if(s.startsWith("put")){
-					outputStream.writeObject("put");
-					System.out.println("Reply:");
-					System.out.println(inputStream.readObject());
+				}else if(s.startsWith("put ")){
+					putFile(s);
 				}else if(s.equals("pwd")){
 					outputStream.writeObject("pwd");
 					System.out.println("Reply:");
@@ -64,16 +62,16 @@ public class FileTransferClient {
 					System.out.println("Reply:");
 					System.out.println(inputStream.readObject());
 				}else{
-					System.out.println("Error, command: "+s+" not supported");
+					System.err.println("Error, command: "+s+" not supported");
 				}
 				
 			}
 			outputStream.writeObject("bye");
 		} catch (IOException e) {
-			System.out.println("Error: IO Exception");
+			System.err.println("Error: IO Exception");
 			e.printStackTrace();
 		} catch(ClassNotFoundException e){
-			System.out.println("Error: ClassNotFound Exception");
+			System.err.println("Error: ClassNotFound Exception");
 			e.printStackTrace();
 		}
 	}
@@ -96,8 +94,21 @@ public class FileTransferClient {
 		}
 	}
 	
-	public void putFile(String name) {
-		
+	public void putFile(String cmd) throws IOException, ClassNotFoundException {
+		if(!cmd.startsWith("put ")) return; //invalid input
+		String localName = cmd.substring(4);
+		byte[] data;
+		try {
+			data = Files.readAllBytes(new File(System.getProperty("user.home")
+					+ File.separator + localName).toPath());
+		} catch (IOException e) {
+			System.err.println("Error: IO exception (is the file there?)");
+			return;
+		}
+		outputStream.writeObject(cmd);
+		outputStream.writeObject(data);
+		System.out.println("Reply:");
+		System.out.println(inputStream.readObject());
 	}
 
 	public static void main(String[] args) {
