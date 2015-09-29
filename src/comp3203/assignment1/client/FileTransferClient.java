@@ -1,11 +1,13 @@
 package comp3203.assignment1.client;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.nio.file.Files;
 
 /**
  * Main class for the file transfer program, client side.
@@ -43,11 +45,9 @@ public class FileTransferClient {
 					outputStream.writeObject("ls");
 					System.out.println("Reply:");
 					System.out.println(inputStream.readObject());
-				}else if(s.equals("get")){
-					outputStream.writeObject("get");
-					System.out.println("Reply:");
-					System.out.println(inputStream.readObject());
-				}else if(s.equals("put")){
+				}else if(s.startsWith("get ")){
+					getFile(s);
+				}else if(s.startsWith("put")){
 					outputStream.writeObject("put");
 					System.out.println("Reply:");
 					System.out.println(inputStream.readObject());
@@ -76,6 +76,28 @@ public class FileTransferClient {
 			System.out.println("Error: ClassNotFound Exception");
 			e.printStackTrace();
 		}
+	}
+	
+	public void getFile(String cmd) throws IOException, ClassNotFoundException {
+		if(!cmd.startsWith("get ")) return; // invalid input
+		String localName = cmd.substring(4);
+		outputStream.writeObject(cmd);
+		Object input = inputStream.readObject();
+		if(input instanceof String) { //i.e. not a file
+			System.out.println("Reply:");
+			System.out.println(input);
+		}
+		else if(input instanceof byte[]) {
+			System.out.print("Retrieving file " + localName + "...");
+			File dest = new File(System.getProperty("user.home") + File.separator + localName);
+			Files.write(dest.toPath(), (byte[]) input);
+			System.out.println("done!");
+			System.out.println("File written to " + dest.getAbsolutePath());
+		}
+	}
+	
+	public void putFile(String name) {
+		
 	}
 
 	public static void main(String[] args) {

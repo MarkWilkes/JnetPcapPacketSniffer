@@ -4,11 +4,13 @@ package comp3203.assignment1.server;
  */
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
 
 
 public class FileTransferServer {
@@ -151,6 +153,19 @@ public class FileTransferServer {
 						out.writeObject("A directory of that name already exists");
 					}
 				}
+				// transfer file to client
+				else if(line.startsWith("get ")) {
+					// full path and name of file
+					String fileName = wd + File.separator + line.substring(4);
+					try {
+						//NOTE: This does not work if the file size exceeds available memory
+						out.writeObject(Files.readAllBytes(new File(fileName).toPath()));
+					} catch(FileNotFoundException e) {
+						out.writeObject("Error: File not found");
+					} catch(SecurityException e) {
+						out.writeObject("Error: Access denied");
+					}
+				}
 				//we don't know what you said client
 				else {
 					out.writeObject("Error command '" + line + "' not known");
@@ -178,13 +193,8 @@ public class FileTransferServer {
 		//make a new server
 		new FileTransferServer();
 		
-		boolean stop = false;
-		
 		//run the connection
-		while(!stop){
-			if(ClientConnection() == -1)
-				stop = true;
-		}
+		ClientConnection();
 	}
 	
 	//changes the working directory to the passed file
