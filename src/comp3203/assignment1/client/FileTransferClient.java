@@ -15,10 +15,13 @@ import java.nio.file.Files;
 
 public class FileTransferClient {
 	
+	//socket to the server
 	Socket connection;
+	//streams
 	ObjectOutputStream outputStream;
 	ObjectInputStream inputStream;
 	
+	//creates a connection to the server
 	public FileTransferClient(String host, int port) {
 		try {
 			System.out.println("Attempting to establish connection to host");
@@ -31,41 +34,55 @@ public class FileTransferClient {
 			
 			System.out.println("Connection Established\n");
 			
+			//loop for input from user
 			while(true){
+				//reads the command from the user
 				System.out.println("\nPlease Enter A Command");
 				s = in.readLine();
 				
+				//stop the client connection
 				if(s.equals("exit")){
 					break;
+				//ping the server
 				}else if(s.equals("ping")){
 					outputStream.writeObject("ping");
 					System.out.println("Reply:");
 					System.out.println(inputStream.readObject());
+				// list the the files on the server's current directory
 				}else if(s.equals("ls")){
 					outputStream.writeObject("ls");
 					System.out.println("Reply:");
 					System.out.println(inputStream.readObject());
+				// get a file from the server
 				}else if(s.startsWith("get ")){
 					getFile(s);
+				// put a file onto the server
 				}else if(s.startsWith("put ")){
 					putFile(s);
+				// print the servers working directory
 				}else if(s.equals("pwd")){
 					outputStream.writeObject("pwd");
 					System.out.println("Reply:");
 					System.out.println(inputStream.readObject());
+				// change the servers working directory
 				}else if(s.startsWith("cd ")){
 					outputStream.writeObject(s);
 					System.out.println("Reply:");
+					//prints the new working directory
 					System.out.println(inputStream.readObject());
+				// make a new directory and move into that directory on server sided
 				}else if(s.startsWith("mkdir ")){
 					outputStream.writeObject(s);
 					System.out.println("Reply:");
+					//print the new working directory path
 					System.out.println(inputStream.readObject());
+				// catch all unrecognized commands
 				}else{
 					System.err.println("Error, command: "+s+" not supported");
 				}
 				
 			}
+			// notify the user that we are done
 			outputStream.writeObject("bye");
 		} catch (IOException e) {
 			System.err.println("Error: IO Exception");
@@ -76,6 +93,7 @@ public class FileTransferClient {
 		}
 	}
 	
+	//retrieves a file from the server
 	public void getFile(String cmd) throws IOException, ClassNotFoundException {
 		if(!cmd.startsWith("get ")) return; // invalid input
 		String localName = cmd.substring(4);
@@ -94,6 +112,7 @@ public class FileTransferClient {
 		}
 	}
 	
+	//opens a file and sends it to the server
 	public void putFile(String cmd) throws IOException, ClassNotFoundException {
 		if(!cmd.startsWith("put ")) return; //invalid input
 		String localName = cmd.substring(4);
@@ -110,19 +129,23 @@ public class FileTransferClient {
 		System.out.println("Reply:");
 		System.out.println(inputStream.readObject());
 	}
-
+	
+	//control flow
 	public static void main(String[] args) {
+		//reads from console
 		BufferedReader in
 		   = new BufferedReader(new InputStreamReader(System.in));
 		
 		String host ;
 		int port;
 		try {
+			//gets the IP and the port
 			System.out.println("Enter a Host IP");
 			host = in.readLine();
 			System.out.println("Enter a Port");
 			port = Integer.parseInt(in.readLine());
 			
+			//runs the file transfer client control flow
 			new FileTransferClient(host, port);
 		} catch (IOException e) {
 			e.printStackTrace();
