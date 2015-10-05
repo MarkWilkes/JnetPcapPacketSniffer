@@ -41,7 +41,7 @@ public class FileTransferServer {
 		}
 	}
 
-	public void listen() {
+	public int listen() {
 		//print the port we are listening on.
 		//we just ask for an open port
 		System.out.println("Listening on port: " + s.getLocalPort());
@@ -50,21 +50,30 @@ public class FileTransferServer {
 			acceptClientConnection();
 		} catch (IOException e) {
 			System.err.println("Accept failed " + s.getLocalPort());
+			return(-1);
 		}
 
 		try {
 			readFromClient();
-		} catch (ClassNotFoundException | IOException e) {
-			// TODO Auto-generated catch block
+		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
+		} catch (IOException e){
+			try {
+				clientSocket.close();
+				System.out.println("Client connection Closed after line read error");
+			} catch (IOException f){
+				System.err.println("Failed to close client connection after line read error");
+			}
+			return(0);
 		}
 
 		try {
 			clientSocket.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			System.err.println("Failed to close client connection");
+			return(-1);
 		}
+		return(0);
 	}
 
 	private int acceptClientConnection() throws IOException {
@@ -200,7 +209,10 @@ public class FileTransferServer {
 
 	public static void main(String[] args) {
 		//make a new server
-		new FileTransferServer().listen();
+		FileTransferServer fts = new FileTransferServer();
+		
+		//run the server while the isn't an unmanageable error
+		while(fts.listen() != -1){}
 	}
 
 	//changes the working directory to the passed file
