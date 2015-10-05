@@ -148,7 +148,8 @@ public class FileTransferServer {
 			//make a new directory
 			else if (line.startsWith("mkdir ")){
 				//gets the new directory name from the command the client made
-				File newdir = new File(line.substring(6)).getAbsoluteFile();
+				File newdir = new File(wd + File.separator + line.substring(6))
+					.getAbsoluteFile();
 				//checks if the directory exists
 				if(!newdir.exists()){
 					//makes the directory
