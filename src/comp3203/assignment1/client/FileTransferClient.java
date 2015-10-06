@@ -42,6 +42,7 @@ public class FileTransferClient {
 				
 				//stop the client connection
 				if(s.equals("exit")){
+					outputStream.writeObject("bye");
 					break;
 				//ping the server
 				}else if(s.equals("ping")){
