@@ -12,16 +12,20 @@ import org.jnetpcap.protocol.tcpip.*;
 import org.jnetpcap.protocol.wan.*;
 import org.jnetpcap.protocol.voip.*;
 import org.jnetpcap.protocol.vpn.*;
+import org.jnetpcap.protocol.lan.*;
 
 import org.jnetpcap.packet.format.FormatUtils.*;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 public class PacketSniffer {
 	
 	public static void main(String[] args) {
 		new MainWindow().setVisible(true);
+		
+		List<PacketContainer> packets = new ArrayList<PacketContainer>();
 		
 		List<PcapIf> deviceList = new ArrayList<PcapIf>();
 		StringBuilder errorBuffer = new StringBuilder();
@@ -64,13 +68,12 @@ public class PacketSniffer {
         		Ip6 ip6 = new Ip6();
         		byte[] sourceIp = new byte[4];
         		byte[] destinationIp = new byte[4];
-        		
+        		Date timeStamp = new Date();
         		String sourceIpAddress = new String();
         		String destinationIpAddress = new String();
+        		PacketContainer pacContain;
         		
         		if(packet.hasHeader(ip4)){	
-        			
-        			checkProtocolv4(packet);
         			
         			sourceIp = packet.getHeader(ip4).source();
         			destinationIp = packet.getHeader(ip4).destination();
@@ -81,10 +84,13 @@ public class PacketSniffer {
         			System.out.println("Ip4");
             		System.out.println("Source IP " + sourceIpAddress);
             		System.out.println("Destination IP " + destinationIpAddress);
+            		
+            		pacContain = new PacketContainer(sourceIpAddress, destinationIpAddress, checkProtocol(packet), "Ip4", timeStamp);
+            		packets.add(pacContain);
         		}
         		else if(packet.hasHeader(ip6)){
         			
-        			checkProtocolv6(packet);
+        			checkProtocol(packet);
         			
         			sourceIp = packet.getHeader(ip6).source();
         			destinationIp = packet.getHeader(ip6).destination();
@@ -95,6 +101,9 @@ public class PacketSniffer {
         			System.out.println("Ip6");
             		System.out.println("Source IP " + sourceIpAddress);
             		System.out.println("Destination IP " + destinationIpAddress);
+            		
+            		pacContain = new PacketContainer(sourceIpAddress, destinationIpAddress, checkProtocol(packet), "Ip6", timeStamp);
+            		packets.add(pacContain);
         		}
         	}
         };
@@ -104,79 +113,56 @@ public class PacketSniffer {
         pcap.close();
 	}
 
-	protected static void checkProtocolv6(PcapPacket packet) {
+	protected static String checkProtocol(PcapPacket packet) {
 		//IP
 		if(packet.hasHeader(new Tcp())){
 			System.out.print("TCP");
+			return("TCP");
 		}
 		else if(packet.hasHeader(new Udp())){
 			System.out.print("UDP");
+			return("UDP");
 		}
 		else if(packet.hasHeader(new Http())){
 			System.out.print("HTTP");
+			return("HTTP");
 		}
 		//Application
 		else if(packet.hasHeader(new Html())){
-			System.out.print("HTML");	
+			System.out.print("HTML");
+			return("HTML");
 		}
 		//WAN
 		else if(packet.hasHeader(new PPP())){
-			System.out.print("PPP");	
+			System.out.print("PPP");
+			return("PPP");
 		}
 		//VoIP
 		else if(packet.hasHeader(new Rtp())){
-			System.out.print("RTP");	
+			System.out.print("RTP");
+			return("RTP");
 		}
 		else if(packet.hasHeader(new Sdp())){
-			System.out.print("SDP");	
+			System.out.print("SDP");
+			return("SDP");
 		}
 		else if(packet.hasHeader(new Sip())){
-			System.out.print("SIP");	
+			System.out.print("SIP");
+			return("SIP");
 		}
 		//VPN
 		else if(packet.hasHeader(new L2TP())){
-			System.out.print("L2TP");	
+			System.out.print("L2TP");
+			return("L2TP");
+		}
+		//LAN
+		else if(packet.hasHeader(new Ethernet())){
+			System.out.print("Ethernet");
+			return("Ethernet");
 		}
 		else{
 			//System.out.println(packet.toString());
-		}
-	}
-
-	protected static void checkProtocolv4(PcapPacket packet) {
-		//IP
-		if(packet.hasHeader(new Tcp())){
-			System.out.print("TCP");
-		}
-		else if(packet.hasHeader(new Udp())){
-			System.out.print("UDP");
-		}
-		else if(packet.hasHeader(new Http())){
-			System.out.print("HTTP");
-		}
-		//Application
-		else if(packet.hasHeader(new Html())){
-			System.out.print("HTML");	
-		}
-		//WAN
-		else if(packet.hasHeader(new PPP())){
-			System.out.print("PPP");	
-		}
-		//VoIP
-		else if(packet.hasHeader(new Rtp())){
-			System.out.print("RTP");	
-		}
-		else if(packet.hasHeader(new Sdp())){
-			System.out.print("SDP");	
-		}
-		else if(packet.hasHeader(new Sip())){
-			System.out.print("SIP");	
-		}
-		//VPN
-		else if(packet.hasHeader(new L2TP())){
-			System.out.print("L2TP");	
-		}
-		else{
-			//System.out.println(packet.toString());
+			return(null);
 		}
 	}
 }
