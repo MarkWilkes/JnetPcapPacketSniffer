@@ -29,6 +29,8 @@ public class PacketSniffer {
 		StringBuilder errorBuffer = new StringBuilder();
 		
 		int result = Pcap.findAllDevs(deviceList, errorBuffer);
+        
+		new MainWindow(deviceList).setVisible(true);
 		
 		System.out.println("Network devices found:");
         int i = 0;
@@ -42,8 +44,6 @@ public class PacketSniffer {
             }
             System.out.println(device.getName() + " [" + description + "]");
         }
-        
-		new MainWindow(deviceList).setVisible(true);
         
 		//TODO check which device the user wants
         

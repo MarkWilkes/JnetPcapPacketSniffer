@@ -2,27 +2,29 @@ package comp3203.packetsniff.ui;
 
 import java.awt.BorderLayout;
 import java.util.List;
-
 import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.UIDefaults;
-import javax.swing.UIManager;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 
 import org.jnetpcap.PcapIf;
 
+import comp3203.packetsniff.PacketSniffer;
+
 public class MainWindow extends JFrame {
 	private JList<DeviceListItem> deviceList = new JList<>();
 	private JScrollPane listPane = new JScrollPane(deviceList);
-	private static UIDefaults defaults = UIManager.getDefaults();
+	private JTextArea mainTextArea = new JTextArea();
+	private JScrollPane mainTextPane = new JScrollPane(mainTextArea);
+	private PcapIf selectedDevice;
 	private ListSelectionListener listListener = new ListSelectionListener() {
 		@Override
 		public void valueChanged(ListSelectionEvent e) {
-			// TODO Auto-generated method stub
-			devicePanel.setDevice(deviceList.getSelectedValue().getDevice());
+			selectedDevice = deviceList.getSelectedValue().getDevice();
+			devicePanel.setDevice(selectedDevice);
 		}
 	};
 	
@@ -45,6 +47,9 @@ public class MainWindow extends JFrame {
 		add(listPane, BorderLayout.WEST);
 		
 		add(devicePanel, BorderLayout.SOUTH);
+		
+		System.setOut(new PrintStreamCapturer(mainTextArea, System.out));
+		add(mainTextPane, BorderLayout.CENTER);
 	}
 	
 	public class DeviceListItem {
