@@ -23,8 +23,6 @@ import java.util.List;
 public class PacketSniffer {
 	
 	public static void main(String[] args) {
-		new MainWindow().setVisible(true);
-		
 		List<PacketContainer> packets = new ArrayList<PacketContainer>();
 		
 		List<PcapIf> deviceList = new ArrayList<PcapIf>();
@@ -42,8 +40,10 @@ public class PacketSniffer {
             else{
             	description = "No description available";
             }
-            System.out.printf("%s [%s]\n", device.getName(), description);
+            System.out.println(device.getName() + " [" + description + "]");
         }
+        
+		new MainWindow(deviceList).setVisible(true);
         
 		//TODO check which device the user wants
         
