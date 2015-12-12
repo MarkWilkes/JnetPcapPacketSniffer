@@ -4,6 +4,8 @@ import java.io.PrintStream;
 
 import javax.swing.JTextArea;
 
+//The following was written by Joffrey at
+//http://stackoverflow.com/questions/12945537/how-to-set-output-stream-to-textarea
 public class PrintStreamCapturer extends PrintStream {
 
     private JTextArea text;
