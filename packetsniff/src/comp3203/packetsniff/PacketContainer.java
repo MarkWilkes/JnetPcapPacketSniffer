@@ -11,7 +11,7 @@ public class PacketContainer {
 	Date timeStamp;
 	boolean displayed;
 	
-	PacketContainer(String src, String dst, String prt, String ip, Date timest){
+	public PacketContainer(String src, String dst, String prt, String ip, Date timest){
 		displayed = true;
 		sourceAddress = src;
 		destinationAddress = dst;
@@ -29,19 +29,19 @@ public class PacketContainer {
 	
 	public boolean filter(PacketContainer filter){
 		displayed = true;
-		if(!filter.getSource().equals(sourceAddress) || filter.getSource()!= null){
+		if(!filter.getSource().equals(sourceAddress) && filter.getSource() != null && !filter.getSource().equals("")){
 			displayed = false;
 		}
 		
-		if(!filter.getDestination().equals(destinationAddress) || filter.getDestination() != null){
+		if(!filter.getDestination().equals(destinationAddress) && filter.getDestination() != null && !filter.getDestination().equals("")){
 			displayed = false;
 		}
 		
-		if(!filter.getProtocol().equals(protocol) || filter.getProtocol() != null){
+		if(!filter.getProtocol().equals(protocol) && filter.getProtocol() != null && !filter.getProtocol().equals("")){
 			displayed = false;
 		}
 		
-		if(!filter.getIPType().equals(ipType) || filter.getIPType() != null){
+		if(!filter.getIPType().equals(ipType) && filter.getIPType() != null && !filter.getIPType().equals("")){
 			displayed = false;
 		}
 		

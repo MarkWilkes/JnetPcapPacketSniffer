@@ -30,7 +30,8 @@ public class PacketSniffer {
 		
 		int result = Pcap.findAllDevs(deviceList, errorBuffer);
         
-		new MainWindow(deviceList).setVisible(true);
+		MainWindow window = new MainWindow(deviceList, packets);
+		window.setVisible(true);	
 		
 		System.out.println("Network devices found:");
         int i = 0;
