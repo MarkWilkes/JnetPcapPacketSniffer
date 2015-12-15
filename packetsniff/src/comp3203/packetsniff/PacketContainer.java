@@ -1,51 +1,54 @@
 package comp3203.packetsniff;
 
 import java.util.Date;
+import java.util.List;
 
 public class PacketContainer {
 	
 	String sourceAddress;
 	String destinationAddress;
-	String protocol;
-	String ipType;
+	List<String> protocols;
 	Date timeStamp;
 	boolean displayed;
 	
-	public PacketContainer(String src, String dst, String prt, String ip, Date timest){
+	public PacketContainer(String src, String dst, List<String> prt, Date timest){
 		displayed = true;
 		sourceAddress = src;
 		destinationAddress = dst;
-		protocol = prt;
-		ipType = ip;
+		protocols = prt;
 		timeStamp = timest;
 	}
 	
 	public String getSource(){ return sourceAddress; }
 	public String getDestination(){ return destinationAddress; }
-	public String getProtocol(){ return protocol; }
-	public String getIPType(){ return ipType; }
+	public List<String> getProtocols(){ return protocols; }
 	public Date getTimeStamp(){ return timeStamp; }
 	public boolean isDisplayed(){ return displayed; }
 	
 	public boolean filter(PacketContainer filter){
-		displayed = true;
 		if(!filter.getSource().equals(sourceAddress) && filter.getSource() != null && !filter.getSource().equals("")){
 			displayed = false;
+			return false;
 		}
 		
 		if(!filter.getDestination().equals(destinationAddress) && filter.getDestination() != null && !filter.getDestination().equals("")){
 			displayed = false;
+			return false;
 		}
 		
-		if(!filter.getProtocol().equals(protocol) && filter.getProtocol() != null && !filter.getProtocol().equals("")){
-			displayed = false;
+		for(String prot : filter.getProtocols()) {
+			boolean contains = false;
+			for(String other : protocols) {
+				if(prot.trim().equalsIgnoreCase(other.trim())) contains = true;
+			}
+			if(contains == false) {
+				displayed = false;
+				return false;
+			}
 		}
 		
-		if(!filter.getIPType().equals(ipType) && filter.getIPType() != null && !filter.getIPType().equals("")){
-			displayed = false;
-		}
-		
-		return displayed;
+		displayed = true;
+		return true;
 	}
 	
 	public String toSerializedString(){
@@ -53,8 +56,7 @@ public class PacketContainer {
 		
 		serialized += sourceAddress + "*";
 		serialized += destinationAddress + "*";
-		serialized += protocol + "*";
-		serialized += ipType + "*";
+		serialized += protocols + "*";
 		serialized += timeStamp.toString() + "*";
 		
 		return serialized;

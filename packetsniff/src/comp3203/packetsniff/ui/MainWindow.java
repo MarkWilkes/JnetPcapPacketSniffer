@@ -8,6 +8,7 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -50,8 +51,16 @@ public class MainWindow extends JFrame {
 	private ListSelectionListener listListener = new ListSelectionListener() {
 		@Override
 		public void valueChanged(ListSelectionEvent e) {
+			if(e.getValueIsAdjusting()) return;
 			selectedDevice = deviceList.getSelectedValue().getDevice();
 			devicePanel.setDevice(selectedDevice);
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					PacketSniffer.listen(selectedDevice);
+				}
+			}).start();
 		}
 	};	
 	
@@ -97,7 +106,7 @@ public class MainWindow extends JFrame {
 	public MainWindow(List<PcapIf> devices, List<PacketContainer> packets) {
 		super("Packet Sniffer");
 		setSize(1280, 800);
-		setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		packetData = packets;
 		
 		buildContentPane(devices);
@@ -166,14 +175,12 @@ public class MainWindow extends JFrame {
 		searchBeforeDatePanel = new JPanel();
 		searchAfterDatePanel = new JPanel();
 		
-		searchIPPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		searchProtocolPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		searchSourcePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		searchDestinationPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		searchBeforeDatePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		searchAfterDatePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		
-		searchIPPanel.setLayout(new GridBagLayout());
 		searchProtocolPanel.setLayout(new GridBagLayout());
 		searchSourcePanel.setLayout(new GridBagLayout());
 		searchDestinationPanel.setLayout(new GridBagLayout());
@@ -193,17 +200,6 @@ public class MainWindow extends JFrame {
 		searchDestinationText = new JTextField();
 		searchBeforeDateText = new JTextField();
 		searchAfterDateText = new JTextField();
-		
-		c.gridx = 0;
-		c.weightx = 0;
-		c.insets = new Insets(0,5,0,5);
-		c.fill = GridBagConstraints.NONE;
-		searchIPPanel.add(searchIPLabel,c);
-		c.gridx = 1;
-		c.weightx = 1;
-		c.insets = new Insets(0,0,0,0);
-		c.fill = GridBagConstraints.BOTH;
-		searchIPPanel.add(searchIPText,c);
 		
 		c.gridx = 0;
 		c.weightx = 0;
@@ -270,16 +266,14 @@ public class MainWindow extends JFrame {
 		c.weightx = .16;
 		c.weighty = .5;
 		c.fill = GridBagConstraints.BOTH;
-		searchDetailsPanel.add(searchIPPanel, c);
-		c.gridx = 1;
 		searchDetailsPanel.add(searchProtocolPanel, c);
-		c.gridx = 2;
+		c.gridx = 1;
 		searchDetailsPanel.add(searchSourcePanel, c);
-		c.gridx = 3;
+		c.gridx = 2;
 		searchDetailsPanel.add(searchDestinationPanel, c);
-		c.gridx = 4;
+		c.gridx = 3;
 		searchDetailsPanel.add(searchBeforeDatePanel, c);
-		c.gridx = 5;
+		c.gridx = 4;
 		searchDetailsPanel.add(searchAfterDatePanel, c);	
 	}
 
@@ -376,7 +370,7 @@ public class MainWindow extends JFrame {
 		//Table
 		//
 		//
-		String[] columnNames = {"IPType","Protocol","Source","Destination","Timestamp"};
+		String[] columnNames = {"Protocol","Source","Destination","Timestamp"};
 
 
 		packetTable = new JTable(new DefaultTableModel(columnNames,0)){
@@ -422,7 +416,7 @@ public class MainWindow extends JFrame {
 			for(int i = 0; i < packetData.size(); i++){
 				if(packetData.get(i).isDisplayed()){
 					PacketContainer p = packetData.get(i);
-					model.addRow(new Object[]{p.getIPType(), p.getProtocol(), p.getSource(), p.getDestination(), p.getTimeStamp()});
+					model.addRow(new Object[]{p.getProtocols(), p.getSource(), p.getDestination(), p.getTimeStamp()});
 				}
 			}
 		}
@@ -430,7 +424,7 @@ public class MainWindow extends JFrame {
 			for (int i = packetData.size() - 1; i > -1; i--) {
 				if(packetData.get(i).isDisplayed()){
 					PacketContainer p = packetData.get(i);
-					model.addRow(new Object[]{p.getIPType(), p.getProtocol(), p.getSource(), p.getDestination(), p.getTimeStamp()});
+					model.addRow(new Object[]{p.getProtocols(), p.getSource(), p.getDestination(), p.getTimeStamp()});
 				}
 			}
 		}
@@ -439,12 +433,16 @@ public class MainWindow extends JFrame {
 	
 	
 	public void applySearchFilter(){
+		List<String> protocols = new ArrayList<>();
+		for(String protocol : searchProtocolText.getText().split(",")) {
+			String trimmed = protocol.trim();
+			if(trimmed.equals("")) continue;
+			else protocols.add(trimmed);
+		}
 		for(int i = 0; i < packetData.size(); i++){
 			packetData.get(i).filter(new PacketContainer(searchSourceText.getText(), 
 					searchDestinationText.getText(), 
-					searchProtocolText.getText(), 
-					searchIPText.getText()
-					, null));
+					protocols, null));
 		}
 	}
 	
