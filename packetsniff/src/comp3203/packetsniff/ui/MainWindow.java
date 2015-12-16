@@ -26,6 +26,8 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.ScrollPaneLayout;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
@@ -65,6 +67,7 @@ public class MainWindow extends JFrame {
 	};	
 	
 	
+	
 	private JPanel packetDetailsTab;
 	private JTable packetTable;
 	private JPanel packetSearchPanel;
@@ -95,10 +98,27 @@ public class MainWindow extends JFrame {
 	private JTextField searchBeforeDateText;
 	private JTextField searchAfterDateText;
 	
+	
 	private boolean sortByNew;
 	
 	private JPanel metricsTab;
-	
+	private JLabel timeRunningMetric;
+	private JLabel packetsSniffedMetric;
+	private JLabel packetsPerSecondMetric;
+	private JLabel tcpPacketsMetric;
+	private JLabel udpPacketsMetric;
+	private JLabel httpPacketsMetric;
+	private JLabel htmlPacketsMetric;
+	private JLabel pppPacketsMetric;
+	private JLabel rtpPacketsMetric;
+	private JLabel sdpPacketsMetric;
+	private JLabel sipPacketsMetric;
+	private JLabel l2tpPacketsMetric;
+	private JLabel lanPacketsMetric;
+	private JLabel ip4PacketsMetric;
+	private JLabel ip6PacketsMetric;
+	private Date startTime;
+	private long lastMetricsUpdate;
 
 	
 	private DeviceInfoPanel devicePanel = new DeviceInfoPanel();
@@ -113,6 +133,7 @@ public class MainWindow extends JFrame {
 		add(contentPane);
 		
 		createButtonListeners();
+		startTime = new Date();
 	}
 	
 	
@@ -139,6 +160,93 @@ public class MainWindow extends JFrame {
 		contentPane.addTab("Live Feed", liveFeedTab);
 		contentPane.addTab("Packet Details", packetDetailsTab);
 		contentPane.addTab("Metrics", metricsTab);
+		
+		ChangeListener changeListener = new ChangeListener() {
+			public void stateChanged(ChangeEvent changeEvent) {
+				JTabbedPane sourceTabbedPane = (JTabbedPane) changeEvent.getSource();
+				int index = sourceTabbedPane.getSelectedIndex();
+				if(sourceTabbedPane.getTitleAt(index).toString().equals("Metrics")){
+					updateMetrics();
+				}
+			}
+		};
+		contentPane.addChangeListener(changeListener);
+	}
+	
+	
+	public void updateMetrics(){
+		
+		long seconds = (new Date().getTime() - startTime.getTime())/1000;
+		timeRunningMetric.setText("Time Running: " + seconds + " Seconds");
+		packetsSniffedMetric.setText("Packets Sniffed: " + packetData.size());
+		packetsPerSecondMetric.setText("Packets Sniffed Per Second: " + (double)packetData.size()/(double)seconds );
+		
+		
+		int numTCP = 0;
+		int numUDP = 0;
+		int numHTTP = 0;
+		int numHTML = 0;
+		int numPPP = 0;
+		int numRTP = 0;
+		int numSDP = 0;
+		int numSIP = 0;
+		int numL2TP = 0;
+		int numLAN = 0;
+		int numIP4 = 0;
+		int numIP6 = 0;
+		
+		
+		for(int i = 0; i < packetData.size(); i++){
+			if(packetData.get(i).getProtocols().contains("TCP")){
+				numTCP++;
+			}
+			if(packetData.get(i).getProtocols().contains("UDP")){
+				numUDP++;
+			}
+			if(packetData.get(i).getProtocols().contains("HTTP")){
+				numHTTP++;
+			}
+			if(packetData.get(i).getProtocols().contains("HTML")){
+				numHTML++;
+			}
+			if(packetData.get(i).getProtocols().contains("PPP")){
+				numPPP++;
+			}
+			if(packetData.get(i).getProtocols().contains("RTP")){
+				numRTP++;
+			}
+			if(packetData.get(i).getProtocols().contains("SDP")){
+				numSDP++;
+			}
+			if(packetData.get(i).getProtocols().contains("SIP")){
+				numSIP++;
+			}
+			if(packetData.get(i).getProtocols().contains("L2TP")){
+				numL2TP++;
+			}
+			if(packetData.get(i).getProtocols().contains("Ethernet")){
+				numLAN++;
+			}
+			if(packetData.get(i).getProtocols().contains("IPv4")){
+				numIP4++;
+			}
+			if(packetData.get(i).getProtocols().contains("IPv6")){
+				numIP6++;
+			}
+		}
+		
+		tcpPacketsMetric.setText("TCP Packets Sniffed:   " + numTCP);
+		udpPacketsMetric.setText("UDP Packets Sniffed:   " + numUDP);
+		httpPacketsMetric.setText("HTTP Packets Sniffed:  " + numHTTP);
+		htmlPacketsMetric.setText("HTML Packets Sniffed:  " + numHTML);
+		pppPacketsMetric.setText("PPP Packets Sniffed:   " + numPPP);
+		rtpPacketsMetric.setText("RTP Packets Sniffed:   " + numRTP);
+		sdpPacketsMetric.setText("SDP Packets Sniffed:   " + numSDP);
+		sipPacketsMetric.setText("SIP Packets Sniffed:   " + numSIP);
+		l2tpPacketsMetric.setText("L2TP Packets Sniffed:  " + numL2TP);
+		lanPacketsMetric.setText("LAN Packets Sniffed:   " + numLAN);
+		ip4PacketsMetric.setText("IPv4 Packets Sniffed:   " + numIP4);
+		ip6PacketsMetric.setText("IPv6 Packets Sniffed:   " + numIP6);
 	}
 	
 	
@@ -399,6 +507,62 @@ public class MainWindow extends JFrame {
 	
 	public void buildMetricsTab(){
 		metricsTab = new JPanel();
+		metricsTab.setLayout(new GridBagLayout());
+		GridBagConstraints c = new GridBagConstraints();
+		
+		timeRunningMetric = new JLabel("Time Running: ");
+		packetsSniffedMetric = new JLabel("Packets Sniffed: ");
+		packetsPerSecondMetric = new JLabel("Packets Sniffed Per Second: ");
+		tcpPacketsMetric = new JLabel("TCP Packets Sniffed:   ");
+		udpPacketsMetric = new JLabel("UDP Packets Sniffed:   ");
+		httpPacketsMetric = new JLabel("HTTP Packets Sniffed: ");
+		htmlPacketsMetric = new JLabel("HTML Packets Sniffed: ");
+		pppPacketsMetric = new JLabel("PPP Packets Sniffed:   ");
+		rtpPacketsMetric = new JLabel("RTP Packets Sniffed:   ");
+		sdpPacketsMetric = new JLabel("SDP Packets Sniffed:   ");
+		sipPacketsMetric = new JLabel("SIP Packets Sniffed:   ");
+		l2tpPacketsMetric = new JLabel("L2TP Packets Sniffed: ");
+		lanPacketsMetric = new JLabel("LAN Packets Sniffed:   ");
+		ip4PacketsMetric = new JLabel("IP4 Packets Sniffed: ");
+		ip6PacketsMetric = new JLabel("IP6 Packets Sniffed:   ");
+		
+		
+		
+		c.gridx = 0;
+		c.gridy = 0;
+		c.fill = GridBagConstraints.HORIZONTAL;
+		c.insets = new Insets(5,5,5,5);
+		c.weightx = 1;
+		metricsTab.add(timeRunningMetric, c);
+		c.gridy = 1;
+		metricsTab.add(packetsSniffedMetric, c);
+		c.gridy = 2;
+		metricsTab.add(packetsPerSecondMetric, c);
+		c.gridy = 3;
+		metricsTab.add(tcpPacketsMetric, c);
+		c.gridy = 4;
+		metricsTab.add(udpPacketsMetric, c);
+		c.gridy = 5;
+		metricsTab.add(httpPacketsMetric, c);
+		c.gridy = 6;
+		metricsTab.add(htmlPacketsMetric, c);
+		c.gridy = 7;
+		metricsTab.add(pppPacketsMetric, c);
+		c.gridy = 8;
+		metricsTab.add(rtpPacketsMetric, c);
+		c.gridy = 9;
+		metricsTab.add(sdpPacketsMetric, c);
+		c.gridy = 10;
+		metricsTab.add(sipPacketsMetric, c);
+		c.gridy = 11;
+		metricsTab.add(l2tpPacketsMetric, c);
+		c.gridy = 12;
+		metricsTab.add(lanPacketsMetric, c);
+		c.gridy = 13;
+		metricsTab.add(ip4PacketsMetric, c);
+		c.gridy = 14;
+		metricsTab.add(ip6PacketsMetric, c);
+		
 	}
 	
 	
