@@ -252,7 +252,7 @@ public class MainWindow extends JFrame {
 		sdpPacketsMetric.setText("SDP Packets Sniffed:   " + numSDP);
 		sipPacketsMetric.setText("SIP Packets Sniffed:   " + numSIP);
 		l2tpPacketsMetric.setText("L2TP Packets Sniffed:  " + numL2TP);
-		lanPacketsMetric.setText("LAN Packets Sniffed:   " + numLAN);
+		lanPacketsMetric.setText("Ethernet Packets Sniffed:   " + numLAN);
 		ip4PacketsMetric.setText("IPv4 Packets Sniffed:   " + numIP4);
 		ip6PacketsMetric.setText("IPv6 Packets Sniffed:   " + numIP6);
 	}
@@ -359,7 +359,6 @@ public class MainWindow extends JFrame {
 		c.gridx = 2;
 		searchDetailsPanel.add(searchDestinationPanel, c);
 		c.gridx = 3;
-		c.gridwidth = 2;
 		searchDetailsPanel.add(searchDevicePanel, c);
 	}
 
@@ -500,7 +499,7 @@ public class MainWindow extends JFrame {
 		sdpPacketsMetric = new JLabel("SDP Packets Sniffed:   ");
 		sipPacketsMetric = new JLabel("SIP Packets Sniffed:   ");
 		l2tpPacketsMetric = new JLabel("L2TP Packets Sniffed: ");
-		lanPacketsMetric = new JLabel("LAN Packets Sniffed:   ");
+		lanPacketsMetric = new JLabel("Ethernet Packets Sniffed:   ");
 		ip4PacketsMetric = new JLabel("IP4 Packets Sniffed: ");
 		ip6PacketsMetric = new JLabel("IP6 Packets Sniffed:   ");
 		
