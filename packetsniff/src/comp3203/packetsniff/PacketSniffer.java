@@ -16,13 +16,15 @@ import org.jnetpcap.packet.format.FormatUtils.*;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class PacketSniffer {
 	
 	static StringBuilder errorBuffer;
 	static List<PacketContainer> packets = new ArrayList<PacketContainer>();
-	static Pcap pcap = null;
+	static Map<PcapIf, Pcap> instances = new HashMap<>();
 	
 	public static void main(String[] args) {
 		
@@ -44,6 +46,14 @@ public class PacketSniffer {
             	description = "No description available";
             }
             System.out.println(device.getName() + " [" + description + "]");
+            
+			new Thread(new Runnable() {
+				@Override
+				public void run() {
+					// TODO Auto-generated method stub
+					PacketSniffer.listen(device);
+				}
+			}).start();
         }
 	}
 
@@ -52,19 +62,17 @@ public class PacketSniffer {
         int flags = Pcap.MODE_PROMISCUOUS;
         int timeOut = 10 * 1000;
         
-        //stop current capture
-		if(pcap != null) {
-			pcap.breakloop();
-			pcap.close();
-		}
-        
-        pcap = Pcap.openLive(device.getName(), snapLength, flags, timeOut, errorBuffer);
+        Pcap pcap = Pcap.openLive(device.getName(), snapLength, flags, timeOut, errorBuffer);
         
         if(pcap == null){
         	System.err.printf("Error opening listening device for network capture:" + errorBuffer.toString());
         	
         	return;
         }
+        
+        instances.put(device, pcap);
+        
+        String deviceString = device.getName() + " [" + device.getDescription() + "]";
         
         PcapPacketHandler<String> packetHandler = new PcapPacketHandler<String>(){
         	
@@ -77,7 +85,8 @@ public class PacketSniffer {
         		String sourceIpAddress = new String();
         		String destinationIpAddress = new String();
         		PacketContainer pacContain;
-        		System.out.println("\n" + checkProtocol(packet));
+        		System.out.println("\nDevice: " + deviceString);
+        		System.out.println(checkProtocol(packet));
         		if(packet.hasHeader(ip4)){
         			sourceIp = packet.getHeader(ip4).source();
         			destinationIp = packet.getHeader(ip4).destination();
@@ -88,7 +97,7 @@ public class PacketSniffer {
             		System.out.println("Source IP " + sourceIpAddress);
             		System.out.println("Destination IP " + destinationIpAddress);
             		
-            		pacContain = new PacketContainer(sourceIpAddress, destinationIpAddress, checkProtocol(packet), timeStamp);
+            		pacContain = new PacketContainer(sourceIpAddress, destinationIpAddress, checkProtocol(packet), timeStamp, deviceString);
             		packets.add(pacContain);
         		}
         		else if(packet.hasHeader(ip6)){
@@ -102,13 +111,15 @@ public class PacketSniffer {
             		System.out.println("Source IP " + sourceIpAddress);
             		System.out.println("Destination IP " + destinationIpAddress);
             		
-            		pacContain = new PacketContainer(sourceIpAddress, destinationIpAddress, checkProtocol(packet), timeStamp);
+            		pacContain = new PacketContainer(sourceIpAddress, destinationIpAddress, checkProtocol(packet), timeStamp, deviceString);
             		packets.add(pacContain);
         		}
         	}
         };
         
         pcap.loop(Pcap.LOOP_INFINITE, packetHandler, "");
+        
+        pcap.close();
 	}
 
 	private static List<String> checkProtocol(PcapPacket packet) {

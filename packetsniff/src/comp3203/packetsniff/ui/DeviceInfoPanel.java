@@ -9,6 +9,8 @@ import javax.swing.JTextArea;
 
 import org.jnetpcap.PcapAddr;
 import org.jnetpcap.PcapIf;
+import org.jnetpcap.PcapSockAddr;
+import org.jnetpcap.packet.format.FormatUtils;
 
 public class DeviceInfoPanel extends JPanel {
 	private JLabel nameLabel = new JLabel("Device: ");
@@ -31,7 +33,7 @@ public class DeviceInfoPanel extends JPanel {
 		descLabel.setText("Description: " + device.getDescription());
 		String addresses = "Addresses:\n";
 		for(PcapAddr addr : device.getAddresses()) {
-			addresses += addr.toString();
+			addresses += FormatUtils.ip(addr.getAddr().getData());
 			addresses += "\n";
 		}
 		addressArea.setText(addresses);

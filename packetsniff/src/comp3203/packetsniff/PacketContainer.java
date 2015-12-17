@@ -3,26 +3,31 @@ package comp3203.packetsniff;
 import java.util.Date;
 import java.util.List;
 
+import comp3203.packetsniff.ui.MainWindow;
+
 public class PacketContainer {
 	
 	String sourceAddress;
 	String destinationAddress;
+	String device;
 	List<String> protocols;
 	Date timeStamp;
 	boolean displayed;
 	
-	public PacketContainer(String src, String dst, List<String> prt, Date timest){
+	public PacketContainer(String src, String dst, List<String> prt, Date timest, String device){
 		displayed = true;
 		sourceAddress = src;
 		destinationAddress = dst;
 		protocols = prt;
 		timeStamp = timest;
+		this.device = device;
 	}
 	
 	public String getSource(){ return sourceAddress; }
 	public String getDestination(){ return destinationAddress; }
 	public List<String> getProtocols(){ return protocols; }
 	public Date getTimeStamp(){ return timeStamp; }
+	public String getDevice() { return device; }
 	public boolean isDisplayed(){ return displayed; }
 	
 	public boolean filter(PacketContainer filter){
@@ -45,6 +50,11 @@ public class PacketContainer {
 				displayed = false;
 				return false;
 			}
+		}
+		
+		if(!filter.getDevice().equals(MainWindow.SHOW_ALL) && !filter.getDevice().equals(device)) {
+			displayed = false;
+			return false;
 		}
 		
 		displayed = true;

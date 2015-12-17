@@ -2,7 +2,9 @@ package comp3203.packetsniff.ui;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.ComponentOrientation;
 import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -11,10 +13,13 @@ import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
@@ -49,24 +54,15 @@ public class MainWindow extends JFrame {
 	private JScrollPane listPane = new JScrollPane(deviceList);
 	private JTextArea mainTextArea = new JTextArea();
 	private JScrollPane mainTextPane = new JScrollPane(mainTextArea);
-	private PcapIf selectedDevice;
 	private ListSelectionListener listListener = new ListSelectionListener() {
 		@Override
 		public void valueChanged(ListSelectionEvent e) {
-			if(e.getValueIsAdjusting()) return;
-			selectedDevice = deviceList.getSelectedValue().getDevice();
-			devicePanel.setDevice(selectedDevice);
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					// TODO Auto-generated method stub
-					PacketSniffer.listen(selectedDevice);
-				}
-			}).start();
+			if(!e.getValueIsAdjusting())
+				devicePanel.setDevice(deviceList.getSelectedValue().getDevice());
 		}
 	};	
 	
-	
+	private List<DeviceListItem> deviceListItems = new ArrayList<>();
 	
 	private JPanel packetDetailsTab;
 	private JTable packetTable;
@@ -83,21 +79,17 @@ public class MainWindow extends JFrame {
 	private JPanel searchProtocolPanel;
 	private JPanel searchSourcePanel;
 	private JPanel searchDestinationPanel;
-	private JPanel searchBeforeDatePanel;
-	private JPanel searchAfterDatePanel;
 	private JLabel searchIPLabel;
 	private JLabel searchProtocolLabel;
 	private JLabel searchSourceLabel;
 	private JLabel searchDestinationLabel;
-	private JLabel searchBeforeDateLabel;
-	private JLabel searchAfterDateLabel;
 	private JTextField searchIPText;
 	private JTextField searchProtocolText;
 	private JTextField searchSourceText;
 	private JTextField searchDestinationText;
-	private JTextField searchBeforeDateText;
-	private JTextField searchAfterDateText;
 	
+	private JPanel searchDevicePanel;
+	private JComboBox<DeviceListItem> searchDevicePicker;
 	
 	private boolean sortByNew;
 	
@@ -117,8 +109,10 @@ public class MainWindow extends JFrame {
 	private JLabel lanPacketsMetric;
 	private JLabel ip4PacketsMetric;
 	private JLabel ip6PacketsMetric;
-	private Date startTime;
-	private long lastMetricsUpdate;
+	private boolean onMetricsTab = false;
+	private long seconds = 0;
+	
+	public static final String SHOW_ALL = "Show all devices";
 
 	
 	private DeviceInfoPanel devicePanel = new DeviceInfoPanel();
@@ -129,11 +123,15 @@ public class MainWindow extends JFrame {
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		packetData = packets;
 		
-		buildContentPane(devices);
+		deviceListItems.add(new DeviceListItem(null));
+		for(PcapIf device : devices) {
+			deviceListItems.add(new DeviceListItem(device));
+		}
+		
+		buildContentPane();
 		add(contentPane);
 		
 		createButtonListeners();
-		startTime = new Date();
 	}
 	
 	
@@ -146,13 +144,14 @@ public class MainWindow extends JFrame {
 			return device;
 		}
 		public String toString() {
-			return device.getName();
+			if(device == null) return SHOW_ALL; // massive awful hack
+			return device.getName() + " [" + device.getDescription() + "]";
 		}
 	}
 	
 	
-	public void buildContentPane(List<PcapIf> devices){
-		buildLiveFeedTab(devices);
+	public void buildContentPane(){
+		buildLiveFeedTab();
 		buildPacketDetailsTab();
 		buildMetricsTab();
 		
@@ -166,17 +165,26 @@ public class MainWindow extends JFrame {
 				JTabbedPane sourceTabbedPane = (JTabbedPane) changeEvent.getSource();
 				int index = sourceTabbedPane.getSelectedIndex();
 				if(sourceTabbedPane.getTitleAt(index).toString().equals("Metrics")){
+					onMetricsTab = true;
 					updateMetrics();
 				}
+				else onMetricsTab = false;
 			}
 		};
 		contentPane.addChangeListener(changeListener);
+
+		Executors.newSingleThreadScheduledExecutor().scheduleAtFixedRate(new Runnable() {
+			@Override
+			public void run() {
+				seconds++;
+				if(onMetricsTab) updateMetrics();
+			}
+			
+		}, 1, 1, TimeUnit.SECONDS);
 	}
 	
 	
 	public void updateMetrics(){
-		
-		long seconds = (new Date().getTime() - startTime.getTime())/1000;
 		timeRunningMetric.setText("Time Running: " + seconds + " Seconds");
 		packetsSniffedMetric.setText("Packets Sniffed: " + packetData.size());
 		packetsPerSecondMetric.setText("Packets Sniffed Per Second: " + (double)packetData.size()/(double)seconds );
@@ -250,15 +258,11 @@ public class MainWindow extends JFrame {
 	}
 	
 	
-	public void buildLiveFeedTab(List<PcapIf> devices){
+	public void buildLiveFeedTab(){
 		liveFeedTab = new JPanel();
 		
 		liveFeedTab.setLayout(new BorderLayout());
-		DeviceListItem[] items = new DeviceListItem[devices.size()];
-		for(int i = 0; i < items.length; i++) {
-			items[i] = new DeviceListItem(devices.get(i));
-		}
-		deviceList.setListData(items);
+		deviceList.setListData(deviceListItems.toArray(new DeviceListItem[1]));
 		deviceList.addListSelectionListener(listListener);
 		
 		listPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
@@ -280,34 +284,29 @@ public class MainWindow extends JFrame {
 		searchProtocolPanel = new JPanel();
 		searchSourcePanel = new JPanel();
 		searchDestinationPanel = new JPanel();
-		searchBeforeDatePanel = new JPanel();
-		searchAfterDatePanel = new JPanel();
+		searchDevicePanel = new JPanel();
 		
 		searchProtocolPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		searchSourcePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		searchDestinationPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-		searchBeforeDatePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-		searchAfterDatePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+		searchDevicePanel.setBorder(BorderFactory.createLineBorder(Color.BLACK));
 		
 		searchProtocolPanel.setLayout(new GridBagLayout());
 		searchSourcePanel.setLayout(new GridBagLayout());
 		searchDestinationPanel.setLayout(new GridBagLayout());
-		searchBeforeDatePanel.setLayout(new GridBagLayout());
-		searchAfterDatePanel.setLayout(new GridBagLayout());
+		searchDevicePanel.setLayout(new FlowLayout(FlowLayout.LEFT));
+		searchDevicePanel.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
 		
 		searchIPLabel = new JLabel("IP");
 		searchProtocolLabel = new JLabel("Protocol");
 		searchSourceLabel = new JLabel("Source");
 		searchDestinationLabel = new JLabel("Destination");
-		searchBeforeDateLabel = new JLabel("Before Date");
-		searchAfterDateLabel = new JLabel("After Date");
 		
 		searchIPText = new JTextField();
 		searchProtocolText = new JTextField();
 		searchSourceText = new JTextField();
 		searchDestinationText = new JTextField();
-		searchBeforeDateText = new JTextField();
-		searchAfterDateText = new JTextField();
+		searchDevicePicker = new JComboBox<>();
 		
 		c.gridx = 0;
 		c.weightx = 0;
@@ -331,6 +330,10 @@ public class MainWindow extends JFrame {
 		c.fill = GridBagConstraints.BOTH;
 		searchSourcePanel.add(searchSourceText,c);
 		
+		for(DeviceListItem item : deviceListItems) {
+			searchDevicePicker.addItem(item);
+		}
+		
 		c.gridx = 0;
 		c.weightx = 0;
 		c.insets = new Insets(0,5,0,5);
@@ -342,32 +345,8 @@ public class MainWindow extends JFrame {
 		c.fill = GridBagConstraints.BOTH;
 		searchDestinationPanel.add(searchDestinationText,c);
 		
-		c.gridx = 0;
-		c.weightx = 0;
-		c.insets = new Insets(0,5,0,5);
-		c.fill = GridBagConstraints.NONE;
-		searchBeforeDatePanel.add(searchBeforeDateLabel,c);
-		c.gridx = 1;
-		c.weightx = 1;
-		c.insets = new Insets(0,0,0,0);
-		c.fill = GridBagConstraints.BOTH;
-		searchBeforeDatePanel.add(searchBeforeDateText,c);
-		searchBeforeDateText.setEnabled(false);
-		
-		c.gridx = 0;
-		c.weightx = 0;
-		c.insets = new Insets(0,5,0,5);
-		c.fill = GridBagConstraints.NONE;
-		searchAfterDatePanel.add(searchAfterDateLabel,c);
-		c.gridx = 1;
-		c.weightx = 1;
-		c.insets = new Insets(0,0,0,0);
-		c.fill = GridBagConstraints.BOTH;
-		searchAfterDatePanel.add(searchAfterDateText,c);
-		searchAfterDateText.setEnabled(false);
-		
-		
-		
+		searchDevicePanel.add(new JLabel("Device"));
+		searchDevicePanel.add(searchDevicePicker);
 		
 		c.gridx = 0;
 		c.gridy = 0;
@@ -380,9 +359,8 @@ public class MainWindow extends JFrame {
 		c.gridx = 2;
 		searchDetailsPanel.add(searchDestinationPanel, c);
 		c.gridx = 3;
-		searchDetailsPanel.add(searchBeforeDatePanel, c);
-		c.gridx = 4;
-		searchDetailsPanel.add(searchAfterDatePanel, c);	
+		c.gridwidth = 2;
+		searchDetailsPanel.add(searchDevicePanel, c);
 	}
 
 	
@@ -606,7 +584,7 @@ public class MainWindow extends JFrame {
 		for(int i = 0; i < packetData.size(); i++){
 			packetData.get(i).filter(new PacketContainer(searchSourceText.getText(), 
 					searchDestinationText.getText(), 
-					protocols, null));
+					protocols, null, searchDevicePicker.getSelectedItem().toString()));
 		}
 	}
 	
@@ -646,8 +624,6 @@ public class MainWindow extends JFrame {
 				searchProtocolText.setText("");
 				searchSourceText.setText("");
 				searchDestinationText.setText("");
-				searchBeforeDateText.setText("");
-				searchAfterDateText.setText("");
 				updateTable();
 			}
 		});
