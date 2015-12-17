@@ -123,7 +123,6 @@ public class MainWindow extends JFrame {
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		packetData = packets;
 		
-		deviceListItems.add(new DeviceListItem(null));
 		for(PcapIf device : devices) {
 			deviceListItems.add(new DeviceListItem(device));
 		}
@@ -168,7 +167,12 @@ public class MainWindow extends JFrame {
 					onMetricsTab = true;
 					updateMetrics();
 				}
-				else onMetricsTab = false;
+				else {
+					onMetricsTab = false;
+					if(sourceTabbedPane.getTitleAt(index).toString().equals("Packet Details")) {
+						updateTable();
+					}
+				}
 			}
 		};
 		contentPane.addChangeListener(changeListener);
@@ -330,6 +334,7 @@ public class MainWindow extends JFrame {
 		c.fill = GridBagConstraints.BOTH;
 		searchSourcePanel.add(searchSourceText,c);
 		
+		searchDevicePicker.addItem(new DeviceListItem(null));
 		for(DeviceListItem item : deviceListItems) {
 			searchDevicePicker.addItem(item);
 		}
